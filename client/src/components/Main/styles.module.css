@@ -1,0 +1,360 @@
+/* styles.module.css */
+
+:root {
+    --background: #f5f5f5;
+	--navbar: #4a90e2;
+}
+
+.container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav_container {
+    width: 100%;
+    background-color: #4a90e2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+}
+
+.navbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+}
+
+.navbar h1 {
+    color: white;
+    margin: 0;
+}
+
+.white_btn {
+    background-color: white;
+    color: #4a90e2;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.white_btn:hover {
+    background-color: #e1e1e1;
+}
+
+.page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    height: calc(100vh - 60px); /* Adjust according to navbar height */
+    background-color: #f5f5f5;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.side_panel {
+    display: flex;
+    flex-direction: column;
+	width: 30%;
+    overflow-y: auto;
+    border-right: 1px solid #000;
+    padding: 7px 7px;
+    box-sizing: border-box;
+    transition: width 0.3s ease;
+}
+
+.new_chat_button {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0px 15px;
+    text-align: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: 20px;
+    height: 40px;
+    border-radius: 35px;
+    background-color: #4a90e2;
+    color: white;
+    cursor: pointer;
+    margin: 20px 20% 20px 20%; /*Add padding if needed for spacing */
+}
+
+.line {
+    border-top: 1px solid #000;
+}
+
+.reports_summary {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 0%;
+}
+
+.report_title {
+    font-weight: 600;
+    font-size: 20px;
+    padding: 0px 7px;
+}
+
+.chat_summary {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+    padding: 0px 5px;
+}
+
+.chat_title {
+    font-weight: 600;
+    font-size: 20px;
+    padding: 7px 7px;
+}
+
+.summary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0px 20px;
+    margin-bottom: 7px;
+    border-radius: 30px;
+    background-color: #4a90e2;
+    gap: 12px;
+    font-weight: 400;
+    font-size: 18px;
+    color: white;
+    height: 48px;
+    cursor: pointer;
+}
+
+.summary svg {
+    flex-shrink: 0;
+}
+
+.summary p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    transition: width 0.3s ease;
+}
+
+.chat_container {
+    display: flex;
+    flex-direction: column;
+    width: auto;
+	height: 100%;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chat_window {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.user_message {
+    align-self: flex-end;
+    background-color: #4a90e2;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.bot_message {
+    align-self: flex-start;
+    background-color: #e1e1e1;
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.input_container {
+    display: flex;
+    border-top: 1px solid #ccc;
+    padding: 10px 0px;
+    background-color: #f9f9f9;
+}
+
+.input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.file_btn {
+    background-color: #000;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+	margin: 0px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.file_btn:hover {
+    background-color: gray;
+}
+
+.send_btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+	margin: 0px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.send_btn:hover {
+    background-color: #357ab7;
+}
+
+.error {
+    color: red;
+    margin: 10px;
+}
+
+.dropzone {
+    width: 40%;
+    height: 150px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    cursor: pointer;
+    color: #000;
+    border: 4px dashed #009578;
+    border-radius: 10px;
+}
+
+.dropzone--over {
+    border-style: solid;
+}
+
+.dropzone_input {
+    display: none;
+}
+
+.progress {
+    margin: 10px;
+}
+
+.description_input {
+    width: 40%;
+    padding: 10px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.description_input input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.text {
+    width: 100%;
+    height: 50%;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+}
+
+.text_area {
+    width: 50%;
+    height: 100%;
+}
+
+.minimize_btn {
+    background-color: var(--navbar);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-top: 10px;
+	width: fit-content;
+
+}
+
+.minimize_btn:hover {
+    background-color: #d1d1d1;
+}
+
+
+.line_chart {
+    width: fit-content;
+    height: 300px;
+}
+
+.hide_y_axis .rct-chart-y-axis {
+    display: none;
+  }
+
+
+/*
+
+<LineChart xAxis={[
+    {
+    id: 'Years',
+    data: message.years,
+    scaleType: 'time',
+    valueFormatter: (date) => monthNames[date.getMonth() - 1],
+    },
+]}
+series={[
+    {
+    id: 'Values',
+    data: message.values,
+    stack: 'total',
+    area: true,
+    showMark: false,
+    },
+]}
+margin={"0px"}
+border={"0px"}
+padding={"0px"}
+width={600}
+height={300} ></LineChart>
+
+                                        */
