@@ -6,7 +6,8 @@ const fileSchema = new mongoose.Schema({
 	fileName: { type: String, required: true },
 	filePath: { type: String, required: true },
 	uploadDate: { type: Date, default: Date.now },
-	description: { type: String, required: false }
+	description: { type: String, required: false },
+	testDate: { type: Date, required: false, default: Date.now }
 });
 
 const File = mongoose.model("File", fileSchema);
@@ -16,7 +17,8 @@ const validateFile = (data) => {
 		userId: Joi.string().required().label("User ID"),
 		fileName: Joi.string().required().label("File Name"),
 		filePath: Joi.string().required().label("File Path"),
-		description: Joi.string().label("Description")
+		description: Joi.string().label("Description"),
+		testDate: Joi.date().label("Test Date")
 	});
   	return schema.validate(data);
 };

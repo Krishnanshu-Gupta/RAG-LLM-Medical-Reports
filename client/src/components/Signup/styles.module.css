@@ -8,8 +8,8 @@
 }
 
 .signup_form_container {
-	width: 900px;
-	height: 500px;
+	width: 80%;
+	height: 80vh;
 	display: flex;
 	border-radius: 10px;
 	box-shadow: 0px 3px 3px -2px rgb(0 0 0 / 20%),
@@ -49,6 +49,9 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	padding: 10px;
+	margin: 10px;
+	border: 10px;
 }
 
 .form_container h1 {
@@ -59,13 +62,15 @@
 .input {
 	outline: none;
 	border: none;
+    margin-bottom: 15px; /* Adds 15px spacing between inputs */
+    padding: 15px; /* Adjust padding for better visual appearance */
+    border: 1px solid #ccc;
 	width: 370px;
-	padding: 15px;
-	border-radius: 10px;
 	background-color: #edf5f3;
-	margin: 5px 0;
-	font-size: 14px;
+    border-radius: 5px;
+    font-size: 1rem;
 }
+
 
 .error_msg {
 	width: 370px;

@@ -1,14 +1,14 @@
-const File = require('../models/file');
+const { File } = require('../models/file'); // Ensure correct import
 
 async function getFilesByUserId(userId) {
     try {
-        // Query the File model to find all files uploaded by the specified user ID
-        const files = await File.find({ userId: userId });
+        // Query the File model to find all files for the specified user
+        const files = await File.find({ userId }).sort({ uploadDate: -1 }); // Sort by most recent uploads
         return files;
     } catch (error) {
-        // Handle any errors
-        console.error("Error fetching files:", error);
-        throw error; // Rethrow the error to be handled by the caller
+        // Log and rethrow the error for the caller to handle
+        console.error("Error fetching files for user ID:", userId, error);
+        throw new Error("Failed to fetch files."); // Optionally throw a more user-friendly error
     }
 }
 

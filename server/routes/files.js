@@ -4,7 +4,14 @@ const multer = require("multer");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const AWS = require('aws-sdk');
+const pdf = require('pdf-parse');
 const { getFilesByUserId } = require('../controllers/fileRetrieval');
+const biomarkerDescriptions = require("../data/biomarkers.json");
+const fs = require('fs');
+const path = require('path');
+
+const biomarkersPath = path.resolve(__dirname, '../data/biomarkers.json');
+const biomarkersData = JSON.parse(fs.readFileSync(biomarkersPath, 'utf-8'));
 
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -13,7 +20,7 @@ AWS.config.update({
 });
 
 const s3 = new AWS.S3();
-const comprehendMedical = new AWS.ComprehendMedical();
+//const comprehendMedical = new AWS.ComprehendMedical();
 
 // Set up Multer for file upload
 const storage = multer.memoryStorage();
@@ -25,96 +32,152 @@ const upload = multer({
 });
 
 router.get('/:token', async (req, res) => {
-    console.log("in get")
     const decoded = jwt.verify(req.params.token, process.env.JWTPRIVATEKEY);
     const userId = decoded._id;
+
     try {
         const files = await File.find({ userId: userId });
-        res.json(files);
+        const urls = files.map(file => {
+            const params = {
+                Bucket: 'medical-reports-1',
+                Key: file.fileName,
+                Expires: 60 * 5
+            };
+
+            const presignedUrl = s3.getSignedUrl('getObject', params);
+            return {
+                ...file._doc,
+                url: presignedUrl
+            };
+        });
+        res.json(urls);
     } catch (error) {
         res.status(500).json({ message: "Error fetching files" });
     }
 });
 
-const processChunksParallel = async (text) => {
-    const chunkSize = 20000;
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const maxRetries = 5;
-
-    const processChunk = async (chunk, retryCount = 0) => {
-        try {
-            const comprehendParams = { Text: chunk };
-            return await comprehendMedical.detectEntitiesV2(comprehendParams).promise();
-        } catch (error) {
-            if (error.code === 'TooManyRequestsException' && retryCount < maxRetries) {
-                await delay(2 ** retryCount * 1000); // Exponential backoff
-                return processChunk(chunk, retryCount + 1);
-            } else {
-                throw error;
-            }
-        }
-    };
-
-    const promises = [];
-    for (let position = 0; position < text.length; position += chunkSize) {
-        const chunk = text.substring(position, position + chunkSize);
-        promises.push(processChunk(chunk));
-    }
-
-    const results = await Promise.all(promises);
-    let allEntities = [];
-    for (const result of results) {
-        const filteredEntities = result.Entities.filter(entity => entity.Category !== 'PROTECTED_HEALTH_INFORMATION');
-        allEntities = allEntities.concat(filteredEntities);
-    }
-    return allEntities;
+const extractBiomarkerResults = async (pdfBuffer) => {
+    const pdfData = await pdf(pdfBuffer); // Extract raw text
+    const text = pdfData.text;
+    return parseBiomarkers(text);
 };
 
-// File upload route
+const parseBiomarkers = (text) => {
+    const biomarkers = [];
+    const lines = text.split('\n');
+
+    // Iterate through biomarkers.json keys, ordered by length of names/aliases (longest first)
+    const sortedBiomarkers = Object.entries(biomarkersData).sort(
+        ([a], [b]) => b.length - a.length
+    );
+
+    sortedBiomarkers.forEach(([biomarker, biomarkerData]) => {
+        // Build a regex to match the full name first, followed by aliases
+        const aliasPatterns = [biomarker, ...(biomarkerData.aliases || [])]
+            .map(alias => `\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`) // Add word boundaries to avoid partial matches
+            .join('|');
+
+        // Match biomarker name/alias and a valid numeric value not followed by a range
+        const regex = new RegExp(`(${aliasPatterns}).*?([0-9.]+)(?!\\s*-\\s*[0-9.])`, 'i');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const match = line.match(regex);
+            if (match) {
+                let resultValue = parseFloat(match[2]);
+
+                // Validate the extracted result to avoid unrealistic values
+                if (isNaN(resultValue) || resultValue < 0 || resultValue > 1e6) {
+                    continue; // Skip invalid matches
+                }
+
+                // Normalize the value dynamically if it's significantly smaller than the reference range
+                const minRef = biomarkerData.referenceRange.min;
+                if (resultValue < minRef / 100) {
+                    const scalingFactor = Math.pow(10, Math.floor(Math.log10(minRef)) - Math.floor(Math.log10(resultValue)));
+                    resultValue *= scalingFactor;
+                }
+
+                // Add the biomarker to the results
+                biomarkers.push({
+                    testName: biomarker,
+                    description: biomarkerData.description,
+                    resultValue,
+                    unit: biomarkerData.unit,
+                    referenceRange: biomarkerData.referenceRange,
+                    status: getBiomarkerStatus(resultValue, biomarkerData.referenceRange),
+                });
+
+                // Move to the next line after a match to prevent overlapping matches
+                break;
+            }
+        }
+    });
+
+    return biomarkers;
+};
+
+// Helper function to determine biomarker status
+const getBiomarkerStatus = (result, referenceRange) => {
+    if (result < referenceRange.min) {
+        return "Low";
+    } else if (result > referenceRange.max) {
+        return "High";
+    } else {
+        return "Normal";
+    }
+};
+
 router.post("/", upload.single("file"), async (req, res) => {
     try {
-        // Validate file data
-        console.log("in post")
-        const data = {
-            token: req.headers['authorization'],
-            fileName: req.file.originalname,
-            filePath: req.file.buffer,
-            description: req.body.description
-        }
-        const { error } = validateData(data);
-        if (error) return res.status(400).send({ message: error.details[0].message });
+        const authHeader = req.headers["authorization"];
+        if (!authHeader) return res.status(401).send({ message: "Authorization token is required." });
 
-        const decoded = jwt.verify(data.token, process.env.JWTPRIVATEKEY);
+        const token = authHeader.replace("Bearer ", "");
+        const decoded = jwt.verify(token, process.env.JWTPRIVATEKEY);
         const userId = decoded._id;
+
+        if (!req.file) return res.status(400).send({ message: "File is required." });
+
+        // S3 Upload
         const params = {
-            Bucket: 'medical-reports-1',
+            Bucket: "medical-reports-1",
             Key: req.file.originalname,
-            Body: req.file.buffer
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype || "application/pdf",
         };
 
-        s3.upload(params, async (err, data) => {
-            if(err){
-                console.error(err);
-                return res.status(500).send({ message: "S3 Upload Error"})
+        s3.upload(params, async (err, s3Data) => {
+            if (err) {
+                console.error("S3 Upload Error:", err);
+                return res.status(500).send({ message: "Error uploading file to S3." });
             }
-            const file = new File({
-                userId: userId,
-                fileName: req.file.originalname,
-                filePath: data.Location,
-                description: req.body.description
-            });
-            await file.save();
-            //res.status(201).send({ message: "File uploaded successfully!" });
 
-            const text = req.file.buffer.toString('utf-8');
-            const medicalInfo = await processChunksParallel(text);
-            file.entities = medicalInfo;
-            console.log(medicalInfo)
-            res.status(201).send({ message: "File uploaded successfully!", medicalInfo });
-        })
-    }
-    catch (error) {
-        console.error(error);
+            let biomarkers = [];
+            try {
+                biomarkers = await extractBiomarkerResults(req.file.buffer);
+            } catch (error) {
+                console.error("Error parsing PDF:", error);
+                return res.status(500).send({ message: "Error processing PDF data." });
+            }
+
+            const file = new File({
+                userId,
+                fileName: req.file.originalname,
+                filePath: s3Data.Location,
+                description: req.body.description,
+                testDate: req.body.testDate
+            });
+
+            await file.save();
+
+            res.status(201).send({
+                message: "File uploaded and biomarker results extracted successfully!",
+                biomarkers,
+            });
+        });
+    } catch (error) {
+        console.error("Internal Server Error:", error);
         res.status(500).send({ message: "Internal Server Error" });
     }
 });
@@ -124,9 +187,11 @@ const validateData = (data) => {
         token: Joi.string().required(),
         fileName: Joi.string().required(),
         filePath: Joi.binary().required(),
-        description: Joi.string().allow('').optional()
+        description: Joi.string().allow('').optional(),
+        testDate: Joi.date().required()
     });
     return dataSchema.validate(data);
 }
+
 
 module.exports = router;

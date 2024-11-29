@@ -1,132 +1,206 @@
 const router = require("express").Router();
 const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require('uuid');
-const {createBloodReport, getAllBloodReports, getBloodReportById,
-    getBloodReportsByUserId, getReportItemByUserId, updateBloodReport} = require('../controllers/bloodReportController');
+const BloodReport = require("../models/bloodReport");
+const biomarkerDescriptions = require("../data/biomarkers.json"); // Ensure this JSON file exists and is correctly referenced
 
-
-router.get("/report/:token", async (req, res) => {
-    const {token} = req.params;
+// Utility to decode token and retrieve user ID
+const decodeToken = (token) => {
     try {
         const decoded = jwt.verify(token, process.env.JWTPRIVATEKEY);
-		const userId = decoded._id;
-        const report = await getBloodReportsByUserId(userId);
-        console.log(report)
-        res.json(report);
-    } catch (error) {
-        console.error('Error getting blood reports for user:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-router.get("/report/:token/:item", async(req, res) => {
-    const {token, item} = req.params;
-    try {
-        const decoded = jwt.verify(token, process.env.JWTPRIVATEKEY);
-		const userId = decoded._id;
-        const report = await getBloodReportById(userId, item);
-        res.json(report);
-    } catch (error) {
-        console.error('Error getting blood reports for user:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-
-
-const generateHealthIndex = (i) => {
-    if (i < 2) {
-        return -0.5 + (i * 0.25); // Unhealthy range
-    } else if (i < 7) {
-        return (i - 2) * 0.2; // Moving to healthy range
-    } else {
-        return 1.2 - ((i - 7) * 0.4); // Moving back to unhealthy range
+        return decoded._id;
+    } catch (err) {
+        throw new Error("Invalid token");
     }
 };
 
-const generateReportDetails = (healthIndex, referenceRanges) => {
-    return {
-        hemoglobin: {
-            result: 13 + (healthIndex * 4),
-            unit: "g/dL",
-            referenceRange: referenceRanges.hemoglobin
-        },
-        whiteBloodCells: {
-            result: 11 - (healthIndex * 4),
-            unit: "thousand cells/mcL",
-            referenceRange: referenceRanges.whiteBloodCells
-        },
-        platelets: {
-            result: 150 + (healthIndex * 200),
-            unit: "thousand/mcL",
-            referenceRange: referenceRanges.platelets
-        },
-        redBloodCells: {
-            result: 4 + (healthIndex * 2),
-            unit: "million cells/mcL",
-            referenceRange: referenceRanges.redBloodCells
-        },
-        hematocrit: {
-            result: 38 + (healthIndex * 8),
-            unit: "%",
-            referenceRange: referenceRanges.hematocrit
-        },
-        meanCorpuscularVolume: {
-            result: 80 + (healthIndex * 10),
-            unit: "fL",
-            referenceRange: referenceRanges.meanCorpuscularVolume
-        },
-        meanCorpuscularHemoglobin: {
-            result: 27 + (healthIndex * 4),
-            unit: "pg",
-            referenceRange: referenceRanges.meanCorpuscularHemoglobin
-        },
-        meanCorpuscularHemoglobinConcentration: {
-            result: 32 + (healthIndex * 2),
-            unit: "g/dL",
-            referenceRange: referenceRanges.meanCorpuscularHemoglobinConcentration
-        },
-        redCellDistributionWidth: {
-            result: 11.5 + (healthIndex * 2.5),
-            unit: "%",
-            referenceRange: referenceRanges.redCellDistributionWidth
-        }
-    };
-};
-
-router.post('/generate', async (req, res) => {
-    const {token} = req.body;
+router.get("/biomarkers", async (req, res) => {
     try {
-        const decoded = jwt.verify(token, process.env.JWTPRIVATEKEY);
-		const userId = decoded._id;
+        // Extract token and validate user
+        const token = req.header("Authorization")?.replace("Bearer ", "");
+        if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-        const referenceRanges = {
-            hemoglobin: { min: 13.8, max: 17.2 },
-            whiteBloodCells: { min: 4.5, max: 11.0 },
-            platelets: { min: 150, max: 450 },
-            redBloodCells: { min: 4.7, max: 6.1 },
-            hematocrit: { min: 40, max: 52 },
-            meanCorpuscularVolume: { min: 80, max: 100 },
-            meanCorpuscularHemoglobin: { min: 27, max: 31 },
-            meanCorpuscularHemoglobinConcentration: { min: 32, max: 36 },
-            redCellDistributionWidth: { min: 11.5, max: 14.5 }
-        };
+        const userId = decodeToken(token);
 
-        for (let i = 0; i < 10; i++) {
-            const healthIndex = generateHealthIndex(i);
-            const date = new Date();
-            date.setFullYear(date.getFullYear() - (10 - i));
+        // Fetch all reports for the user, sorted by reportDate descending
+        const reports = await BloodReport.find({ userId })
+            .sort({ reportDate: -1 })
+            .lean();
 
-            await createBloodReport(userId, generateReportDetails(healthIndex, referenceRanges), date);
+        if (!reports || reports.length === 0) {
+            return res.status(404).json({ message: "No reports found for user" });
+        }
+        // Build a map of the most recent biomarkers
+        const biomarkerMap = new Map();
+
+        for (const report of reports) {
+            for (const biomarker of report.biomarkers) {
+                // Add biomarker to the map if not already present
+                if (!biomarkerMap.has(biomarker.name)) {
+                    biomarkerMap.set(biomarker.name, {
+                        name: biomarker.name,
+                        description: biomarker.description,
+                        result: biomarker.result,
+                        unit: biomarker.unit,
+                        referenceRange: biomarker.referenceRange,
+                        reportDate: report.reportDate, // Keep track of where it came from
+                    });
+                }
+            }
         }
 
-        res.status(200).json({ message: 'Synthetic blood reports created successfully' });
+        // Convert the map back to an array and send it as a response
+        const mostRecentBiomarkers = Array.from(biomarkerMap.values());
+        //mostRecentBiomarkers)
+        res.json(mostRecentBiomarkers);
     } catch (error) {
-        console.error('Error creating blood reports:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error("Error fetching biomarkers:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
+// Endpoint to fetch the most recent blood report for a user
+router.get("/latest/:token", async (req, res) => {
+    const { token } = req.params;
+    try {
+        const userId = decodeToken(token);
 
+        const latestReport = await BloodReport.findOne({ userId })
+            .sort({ reportDate: -1 }) // Sort by most recent date
+            .lean();
+
+        if (!latestReport) {
+            return res.status(404).json({ message: "No reports found for user" });
+        }
+
+        res.json(latestReport);
+    } catch (error) {
+        console.error("Error fetching latest blood report:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// Endpoint to fetch historical data for a specific biomarker
+router.get("/history/:token/:biomarker", async (req, res) => {
+    const { token, biomarker } = req.params;
+    try {
+        const userId = decodeToken(token);
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized access" });
+        }
+
+        // Fetch all reports for the user, sorted by date
+        const reports = await BloodReport.find({ userId }).sort({ reportDate: 1 }).lean();
+        // Extract historical values for the specified biomarker
+        const history = reports
+            .map((report) => {
+                const biomarkerData = report.biomarkers.find((b) => b.name.toLowerCase() === biomarker.toLowerCase());
+
+                return biomarkerData
+                    ? {
+                          date: new Date(report.reportDate).toLocaleDateString("en-US"),
+                          value: biomarkerData.result,
+                          unit: biomarkerData.unit,
+                          normalRange: biomarkerData.referenceRange,
+                          description: biomarkerData.description, // Optional for additional info
+                      }
+                    : null;
+            })
+            .filter(Boolean); // Remove null entries
+
+        if (!history.length) {
+            return res.status(404).json({ message: `No data found for biomarker: ${biomarker}` });
+        }
+        res.json(history);
+    } catch (error) {
+        console.error("Error fetching biomarker history:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// Endpoint to provide data for LLM insights
+router.get("/llm/insights/:token", async (req, res) => {
+    const { token } = req.params;
+    try {
+        const userId = decodeToken(token);
+
+        const reports = await BloodReport.find({ userId })
+            .sort({ reportDate: -1 })
+            .lean();
+
+        if (!reports.length) {
+            return res.status(404).json({ message: "No reports found for user" });
+        }
+
+        const mostRecentReport = reports[0];
+        const historicalData = {};
+
+        // Extract historical data for each biomarker
+        reports.forEach((report) => {
+            report.biomarkers.forEach((biomarker) => {
+                if (!historicalData[biomarker.name]) {
+                    historicalData[biomarker.name] = [];
+                }
+                historicalData[biomarker.name].push({
+                    date: report.reportDate,
+                    value: biomarker.result,
+                    unit: biomarker.unit,
+                });
+            });
+        });
+
+        res.json({
+            mostRecent: mostRecentReport,
+            historical: historicalData,
+        });
+    } catch (error) {
+        console.error("Error fetching biomarker insights:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+router.post("/", async (req, res) => {
+    try {
+        const token = req.header("Authorization")?.replace("Bearer ", "");
+        if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+        const userId = decodeToken(token);
+        const { reportDate, biomarkers } = req.body;
+
+        if (!userId || !reportDate || !biomarkers) {
+            return res.status(400).send({ message: "userId, reportDate, and biomarkers are required." });
+        }
+
+        // Format biomarkers to match MongoDB schema
+        const formattedBiomarkers = biomarkers.map(biomarker => ({
+            name: biomarker.testName,
+            description: biomarker.description,
+            result: biomarker.resultValue,
+            unit: biomarker.unit,
+            referenceRange: {
+                min: biomarker.referenceRange.min,
+                max: biomarker.referenceRange.max
+            },
+            status: biomarker.status
+        }));
+
+        // Create the blood report
+        const bloodReport = new BloodReport({
+            userId: userId,
+            reportDate: new Date(reportDate),
+            biomarkers: formattedBiomarkers
+        });
+
+        // Save to the database
+        await bloodReport.save();
+
+        res.status(201).send({
+            message: "Blood report saved successfully!",
+            bloodReport
+        });
+    } catch (error) {
+        console.error("Error saving blood report:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+});
 
 module.exports = router;

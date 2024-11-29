@@ -3,7 +3,6 @@ import styles from './styles.module.css';
 
 const BotResponse = ({ response }) => {
 	// Transform response into JSX elements
-	console.log(response)
 	if (typeof response === 'object' && response !== null && response.$$typeof === Symbol.for('react.element')) {
 		response = response.props.response
 	}
