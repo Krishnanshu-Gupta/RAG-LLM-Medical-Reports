@@ -41,7 +41,6 @@ const getChatbotResponse = async (message, biomarkerData, messages) => {
                 return biomarker;
             }
         }
-
         // Check if any of the keywords are mentioned
         if (keywords.some(keyword => message.toLowerCase().includes(keyword.toLowerCase()))) {
             return "report";
@@ -59,8 +58,6 @@ const getChatbotResponse = async (message, biomarkerData, messages) => {
         const biomarkerInfo = biomarkerList[mentionedBiomarker];
         fullMessage += `. Here is the biomarker data: ${JSON.stringify(biomarkerData)}`;
     }
-	console.log(messages)
-
     // Build the conversation context by combining previous messages
     const context = messages.map(item => `${item.sender}: ${item.text}`).join('\n');
 
@@ -140,7 +137,7 @@ const generateResponse = async (message, biomarkerData, messages) => {
         }
 
         const data = await response.json();
-        console.log("Ollama API Response:", data);
+        //console.log("Ollama API Response:", data);
 
         // Ensure that the response contains the necessary content
         if (!data.message || !data.message.content) {
@@ -201,12 +198,9 @@ router.post("/chat", async (req, res) => {
         const userId = decoded._id;
 
         await saveMessage(userId, conversationID, "user", message, topic);
-		console.log("168: ", message)
-        //const botResponse = await getChatbotResponse(message, data, messages);
-		const botResponse = await generateResponse(message, data);
-		console.log("170", botResponse)
+        const botResponse = await getChatbotResponse(message, data, messages);
+		//generateResponse(message, data);
         await saveMessage(userId, conversationID, "bot", botResponse, topic);
-		console.log("Saved")
         res.json({ botResponse });
     } catch (error) {
         console.error("Chat error:", error);

@@ -208,8 +208,10 @@ body, html {
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
+    white-space: pre-wrap;
     word-wrap: break-word;
 }
+
 
 .input_container {
     display: flex;

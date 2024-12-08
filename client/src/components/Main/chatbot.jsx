@@ -304,7 +304,7 @@ function Chatbot() {
 										/>
 										<YAxis />
 										<Tooltip content={renderTooltipWithoutRange} />
-					<Legend content={renderLegendWithoutRange} />
+										<Legend content={renderLegendWithoutRange} />
 										<Area
 											type="monotone"
 											dataKey="range"
@@ -331,22 +331,22 @@ function Chatbot() {
 							>
 								View Results for ...
 							</button>
-				<button
-				className={styles.option_btn}
-				onClick={() => {
-					navigate("/reports/results");
-				}}
-				>
-				View All Results
-				</button>
+							<button
+							className={styles.option_btn}
+							onClick={() => {
+								navigate("/reports/results");
+							}}
+							>
+							View All Results
+							</button>
 							<button
 								className={styles.option_btn}
 								onClick={() => {
-									setInput("Discuss your latest report");
+									setInput("Discuss my latest report");
 									sendMessage();
 								}}
 							>
-								Discuss Your Latest Report
+								Discuss my Latest Report
 							</button>
 						</div>
 						<div className={styles.input_container}>
