@@ -6,6 +6,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 const Results = () => {
     const [biomarkers, setBiomarkers] = useState([]);
     const [search, setSearch] = useState("");
@@ -30,7 +32,7 @@ const Results = () => {
                 setLoading(true);
                 const token = localStorage.getItem("token");
                 const response = await axios.get(
-                    "http://localhost:8080/api/bloodreport/biomarkers",
+                    `${apiurl}/bloodreport/biomarkers`,
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }

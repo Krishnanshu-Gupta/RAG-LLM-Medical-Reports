@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 const AddReports = () => {
 	const [step, setStep] = useState(1);
 	const [screeningType, setScreeningType] = useState("");
@@ -58,12 +60,12 @@ const AddReports = () => {
 			axios.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem("token")}`;
 
 			console.log("Uploading file...");
-			const response = await axios.post("http://localhost:8080/api/files", formData);
+			const response = await axios.post(`${apiurl}/files`, formData);
 			const biomarkers = response.data.biomarkers;
 
 			// Generate the blood report
 			const generateResponse = await axios.post(
-				`http://localhost:8080/api/bloodreport/`,
+				`${apiurl}/bloodreport/`,
 				{
 					reportDate: new Date(testDate).toISOString(), // Example: current date
 					biomarkers: biomarkers // Pass the biomarkers array received from the `/api/files` endpoint

@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 const LabReports = () => {
     const [reports, setReports] = useState([]);
     const [error, setError] = useState(null);
@@ -30,7 +32,7 @@ const LabReports = () => {
             try {
                 const token = localStorage.getItem("token"); // Get token from localStorage
 
-                const response = await axios.get(`http://localhost:8080/api/files/${token}`); // Adjust endpoint as needed
+                const response = await axios.get(`${apiurl}/files/${token}`); // Adjust endpoint as needed
                 setReports(response.data); // Set fetched reports with pre-signed URLs
             } catch (err) {
                 console.error("Error fetching reports:", err);

@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 const Profile = () => {
     // State to hold profile data
     const [profileData, setProfileData] = useState(null);
@@ -23,7 +25,7 @@ const Profile = () => {
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/api/users/profile/${localStorage.getItem("token")}`, {
+                const response = await axios.get(`${apiurl}/users/profile/${localStorage.getItem("token")}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },

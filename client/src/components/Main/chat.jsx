@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {ProgressBarLine} from 'react-progressbar-line';
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 function Chat(){
 	const [error, setError] = useState("");
 	const inputRef = useRef(null);
@@ -37,12 +39,12 @@ function Chat(){
 
 			// Append the token to the request headers
 			axios.defaults.headers.common['Authorization'] = `${localStorage.getItem("token")}`;
-			const response = await axios.post("http://localhost:8080/api/files", fileUpload);
+			const response = await axios.post(`${apiurl}/files`, fileUpload);
 			console.log(response.data.message);
 			console.log(response.data.medicalInfo)
 			setMedicalInfo(response.data.medicalInfo);
 
-			axios.get(`http://localhost:8080/api/files/${localStorage.getItem("token")}`)
+			axios.get(`${apiurl}/files/${localStorage.getItem("token")}`)
 				.then(response => {
 					// Handle the response data
 					console.log('Files:', response.data);

@@ -16,6 +16,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 const BiomarkerExpanded = () => {
 	const navigate = useNavigate();
 	const { name } = useParams();
@@ -42,7 +44,7 @@ const BiomarkerExpanded = () => {
 				}
 
 				const response = await axios.get(
-					`http://localhost:8080/api/bloodreport/history/${token}/${name}`
+					`${apiurl}/bloodreport/history/${token}/${name}`
 				);
 				console.log(response.data)
 				const history = response.data.map((record) => ({

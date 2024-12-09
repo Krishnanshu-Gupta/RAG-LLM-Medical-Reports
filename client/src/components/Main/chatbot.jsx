@@ -19,6 +19,8 @@ import {
 	DefaultLegendContent,
 } from "recharts";
 
+const apiurl = process.env.REACT_APP_API_BASE_URL;
+
 function Chatbot() {
 	const [input, setInput] = useState("");
 	const [error, setError] = useState("");
@@ -37,7 +39,7 @@ function Chatbot() {
 	const fetchConversations = async () => {
 		try {
 			const response = await axios.get(
-				`http://localhost:8080/api/conversations/user/${localStorage.getItem("token")}`,
+				`${apiurl}/conversations/user/${localStorage.getItem("token")}`,
 				{
 					headers: {
 						Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -66,7 +68,7 @@ function Chatbot() {
 	const chatClicks = async (conversationID) => {
 		try {
 			const response = await axios.get(
-				`http://localhost:8080/api/conversations/conversation/${localStorage.getItem("token")}/${conversationID}`,
+				`${apiurl}/conversations/conversation/${localStorage.getItem("token")}/${conversationID}`,
 				{
 					headers: {
 						Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -100,7 +102,7 @@ function Chatbot() {
 			}
 
 			const response = await axios.get(
-			`http://localhost:8080/api/bloodreport/history/${token}/${name}`
+			`${apiurl}/bloodreport/history/${token}/${name}`
 			);
 			const history = response.data.map((record) => ({
 			date: record.date,
@@ -145,7 +147,7 @@ function Chatbot() {
 			}
 			// Pass token as a URL parameter
 			const response = await axios.get(
-				`http://localhost:8080/api/bloodreport/llm/insights/${token}`
+				`${apiurl}/bloodreport/llm/insights/${token}`
 			);
 			console.log(response.data);
 			return response.data;
@@ -201,7 +203,7 @@ function Chatbot() {
 			console.log(biodata); // Log the biodata for debugging
 
 			// Ensure correct message structure for API call
-			const response = await axios.post("http://localhost:8080/api/conversations/chat", {
+			const response = await axios.post(`${apiurl}/conversations/chat`, {
 				message: temp, // Current input message
 				messages: messages, // Full conversation context
 				data: biodata, // Biomarker data for context
