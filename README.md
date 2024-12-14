@@ -2,6 +2,8 @@
 
 This project automates the extraction, processing, and visualization of biomarker data from lab test reports. Leveraging cutting-edge technologies like fine-tuned large language models and an interactive web interface, the system bridges the gap between raw medical data and actionable health insights.
 
+[Read the Full Report (PDF)](./Report.pdf)
+
 ---
 
 ## Features
