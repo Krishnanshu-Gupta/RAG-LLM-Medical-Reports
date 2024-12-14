@@ -116,3 +116,41 @@ This project automates the extraction, processing, and visualization of biomarke
 ## Vision
 
 This project aims to empower users with clear, actionable insights from their medical data. By combining robust parsing capabilities, interactive visualizations, and the power of fine-tuned AI, we make health monitoring intuitive, proactive, and impactful.
+
+---
+
+## Running the Code
+
+1. **Clone the Repository**  
+   Clone the repository and navigate into it:
+   ```bash
+   git clone https://github.com/your-repo-url/rag-medical-reports.git](https://github.com/Krishnanshu-Gupta/RAG-LLM-Medical-Reports.git)
+   cd RAG-LLM-Medical-Reports/
+   ```
+
+2. **Install Dependencies**
+   Navigate to /client and /server directories and install dependencies
+   ```bash
+   npm install
+   ```
+
+3. **Start frontend and backend**
+   Navigate to /client and /server directories and run the start script
+   ```bash
+   npm run start
+   ```
+
+4. **Access the Application**
+   https://localhost:3000
+
+5. **Setup Environment variables**
+   Need to create .env file in server to contain MongoDB, AWS S3, and JWT tokens.
+   ```bash
+   MONGODB_URI=<your-mongo-uri>
+   AWS_ACCESS_KEY_ID=<your-aws-access-key-id>
+   AWS_SECRET_ACCESS_KEY=<your-aws-secret-access-key>
+   AWS_REGION=<your-aws-region>
+   JWTPRIVATEKEY=<your-jwt-secret-key>
+   ```
+
+6. Enjoy!
