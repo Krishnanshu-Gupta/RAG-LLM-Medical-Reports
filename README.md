@@ -128,22 +128,19 @@ This project aims to empower users with clear, actionable insights from their me
    cd RAG-LLM-Medical-Reports/
    ```
 
-2. **Install Dependencies**
+2. **Install Dependencies**  
    Navigate to /client and /server directories and install dependencies
    ```bash
    npm install
    ```
 
-3. **Start frontend and backend**
+3. **Start frontend and backend**  
    Navigate to /client and /server directories and run the start script
    ```bash
    npm run start
    ```
 
-4. **Access the Application**
-   https://localhost:3000
-
-5. **Setup Environment variables**
+4. **Setup Environment variables**  
    Need to create .env file in server to contain MongoDB, AWS S3, and JWT tokens.
    ```bash
    MONGODB_URI=<your-mongo-uri>
@@ -153,4 +150,5 @@ This project aims to empower users with clear, actionable insights from their me
    JWTPRIVATEKEY=<your-jwt-secret-key>
    ```
 
-6. Enjoy!
+5. **Access the Application**  
+   Enjoy at: https://localhost:3000
