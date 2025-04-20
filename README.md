@@ -6,6 +6,21 @@ This project automates the extraction, processing, and visualization of biomarke
 
 ---
 
+## Demo Screenshots
+
+<div align="center">
+  <img src="./assets/demo1.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo2.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo3.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo4.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo5.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo6.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo7.png" width="80%" style="margin: 12px 0;" />
+  <img src="./assets/demo8.png" width="80%" style="margin: 12px 0;" />
+</div>
+
+---
+
 ## Features
 
 ### **1. Automated Biomarker Parsing**
